@@ -19,11 +19,13 @@ def count_tokens(text: str, model: str = "gpt-4") -> int:
     return len(encoding.encode(text))
 
 class GPTClient:
-    def __init__(self, api_key: str = None, model: str = 'gpt-4o-mini-2024-07-18'):# 'gpt-4o-mini-2024-07-18'):# 'o1-mini-2024-09-12'):
+    def __init__(self, api_key: str = None, model: str = None):
+        if model is None:
+            model = os.getenv('CHEEP_MODEL', 'ollama/llama3.1:8b')
         if api_key is None:
-            api_key = os.getenv('OPENAI_API_KEY')
+            api_key = os.getenv('OPENAI_API_KEY', '')
             api_url = os.getenv('API_BASE_URL')
-            if api_key is None:
+            if not api_key and 'ollama' not in model:
                 raise ValueError("API key must be provided or set in OPENAI_API_KEY environment variable")
         
         self.client = openai.AsyncClient(

@@ -2,6 +2,7 @@ from research_agent.inno.memory.codetree_memory import CodeTreeMemory, DummyRera
 from research_agent.inno.memory.code_memory import CodeReranker
 from research_agent.inno.environment.docker_env import DockerEnv
 import os
+from research_agent.constant import COMPLETION_MODEL
 from research_agent.inno.io_utils import compress_folder, get_file_md5
 from research_agent.inno.registry import register_tool
 
@@ -14,8 +15,8 @@ def code_tree_rag(query_text: str, env: DockerEnv) -> str:
     Returns:
         A string representation of the reranked results.
     """
-    code_memory = CodeTreeMemory(project_path = './code_db', db_name='.code_tree', platform='OpenAI', api_key=os.getenv("OPENAI_API_KEY"))
-    code_reranker = CodeReranker(model="gpt-4o-2024-08-06")
+    code_memory = CodeTreeMemory(project_path = './code_db', db_name='.code_tree')
+    code_reranker = CodeReranker(model=COMPLETION_MODEL)
     code_path = f"{env.local_workplace}/metachain"
     compress_folder(code_path, f"{env.local_workplace}/", "metachain.zip")
     code_id = get_file_md5(f"{env.local_workplace}/metachain.zip")

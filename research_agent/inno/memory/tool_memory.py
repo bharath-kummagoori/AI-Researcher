@@ -13,9 +13,9 @@ class ToolMemory(Memory):
         self,
         project_path: str,
         db_name: str = '.tool_table',
-        platform: str = 'OpenAI',
+        platform: str = None,
         api_key: str = None,
-        embedding_model: str = "text-embedding-3-small",
+        embedding_model: str = None,
     ):
         super().__init__(
             project_path=project_path,

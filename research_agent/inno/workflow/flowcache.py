@@ -105,8 +105,10 @@ class ToolModule:
                 return None
         return None
 
+from research_agent.constant import COMPLETION_MODEL
+
 class FlowModule(ABC):
-    def __init__(self, cache_path: str, log_path: Union[str, None, MetaChainLogger] = None, model: str = "gpt-4o-2024-08-06"):
+    def __init__(self, cache_path: str, log_path: Union[str, None, MetaChainLogger] = None, model: str = COMPLETION_MODEL):
         self.cache_path = cache_path
         self.client = MetaChain(log_path=log_path)
         self.model = model

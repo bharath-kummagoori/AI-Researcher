@@ -5,7 +5,7 @@ from litellm import completion
 import re
 
 class CodeMemory(Memory):
-    def __init__(self, project_path: str, db_name: str = '.sa', platform: str = 'OpenAI', api_key: str = None, embedding_model: str = "text-embedding-ada-002"):
+    def __init__(self, project_path: str, db_name: str = '.sa', platform: str = None, api_key: str = None, embedding_model: str = None):
         super().__init__(project_path, db_name, platform, api_key, embedding_model)
         self.collection_name = 'code_memory'
 

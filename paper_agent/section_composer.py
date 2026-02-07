@@ -24,7 +24,9 @@ def setup_logging(research_field):
     )
 
 class SectionComposer(ABC):
-    def __init__(self, research_field: str, section_name: str, structure_iterations: int = 3, gpt_model='gpt-4o-mini-2024-07-18'):
+    def __init__(self, research_field: str, section_name: str, structure_iterations: int = 3, gpt_model=None):
+        if gpt_model is None:
+            gpt_model = os.getenv('CHEEP_MODEL', 'ollama/llama3.1:8b')
         self.gpt_client = GPTClient(model=gpt_model)
         self.structure_iterations = structure_iterations
         self.research_field = research_field

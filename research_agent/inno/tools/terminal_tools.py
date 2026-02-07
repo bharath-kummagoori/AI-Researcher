@@ -5,6 +5,7 @@ import base64
 import math
 # from metachain.util import run_command_in_container
 from research_agent.inno.environment.docker_env import DockerEnv, DockerConfig
+from research_agent.inno.environment.local_env import LocalEnv
 from research_agent.inno.registry import register_tool
 from research_agent.inno.environment.markdown_browser.requests_markdown_browser import RequestsMarkdownBrowser
 from typing import Tuple, Optional, Dict

@@ -16,6 +16,8 @@ from pydantic import BaseModel, Field
 from research_agent.constant import DOCKER_WORKPLACE_NAME, COMPLETION_MODEL, CHEEP_MODEL
 from research_agent.inno.util import single_select_menu
 from research_agent.inno.environment.docker_env import DockerEnv, DockerConfig
+from research_agent.inno.environment.local_env import LocalEnv, LocalConfig
+from research_agent.constant import EXECUTION_MODE
 from research_agent.inno.environment.browser_env import BrowserEnv
 from research_agent.inno.environment.markdown_browser import RequestsMarkdownBrowser
 import asyncio
@@ -62,7 +64,7 @@ def get_args():
     parser.add_argument("--instance_path", type=str, default="benchmark/gnn.json")
     parser.add_argument('--container_name', type=str, default='paper_eval')
     parser.add_argument("--task_level", type=str, default="task1")
-    parser.add_argument("--model", type=str, default="gpt-4o-2024-08-06")
+    parser.add_argument("--model", type=str, default="ollama/llama3.1:8b")
     parser.add_argument("--workplace_name", type=str, default="workplace")
     parser.add_argument("--cache_path", type=str, default="cache")
     parser.add_argument("--port", type=int, default=12345)
@@ -98,7 +100,7 @@ def github_search(metadata: Dict) -> str:
     return github_result
 
 class InnoFlow(FlowModule):
-    def __init__(self, cache_path: str, log_path: Union[str, None, MetaChainLogger] = None, model: str = "gpt-4o-2024-08-06", code_env: DockerEnv = None, web_env: BrowserEnv = None, file_env: RequestsMarkdownBrowser = None):
+    def __init__(self, cache_path: str, log_path: Union[str, None, MetaChainLogger] = None, model: str = COMPLETION_MODEL, code_env: DockerEnv = None, web_env: BrowserEnv = None, file_env: RequestsMarkdownBrowser = None):
         super().__init__(cache_path, log_path, model)
         self.load_ins = ToolModule(load_instance, cache_path)
         self.git_search = ToolModule(github_search, cache_path)
@@ -538,13 +540,21 @@ def main(args, references):
     local_root = os.path.join(os.getcwd(),"workplace_paper" , f"task_{instance_id}" + "_" + COMPLETION_MODEL.replace("/", "__"),  args.workplace_name)
     container_name = args.container_name + "_" + instance_id + "_" + COMPLETION_MODEL.replace("/", "__")
     os.makedirs(local_root, exist_ok=True)
-    env_config = DockerConfig(container_name = container_name, 
-                              workplace_name = args.workplace_name, 
-                              communication_port = args.port, 
-                              local_root = local_root,
-                              )
-    
-    code_env = DockerEnv(env_config)
+    if EXECUTION_MODE == 'local':
+        env_config = LocalConfig(
+            workplace_name=args.workplace_name,
+            communication_port=args.port,
+            local_root=local_root,
+        )
+        code_env = LocalEnv(env_config)
+    else:
+        env_config = DockerConfig(
+            container_name=container_name,
+            workplace_name=args.workplace_name,
+            communication_port=args.port,
+            local_root=local_root,
+        )
+        code_env = DockerEnv(env_config)
     code_env.init_container()
     setup_dataset(args.category, code_env.local_workplace)
     web_env = BrowserEnv(browsergym_eval_env = None, local_root=env_config.local_root, workplace_name=env_config.workplace_name)

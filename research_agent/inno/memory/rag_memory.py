@@ -9,24 +9,23 @@ from openai import OpenAI
 import numpy as np
 from chromadb.api.types import QueryResult
 chromadb.logger.setLevel(chromadb.logging.ERROR)
-from research_agent.constant import API_BASE_URL
+from research_agent.constant import API_BASE_URL, EMBEDDING_PLATFORM
 
 class Memory:
     def __init__(
             self,
             project_path: str,
             db_name: str = '.sa',
-            platform: str = 'OpenAI', 
-            api_key: str = None, 
-            embedding_model: str = "text-embedding-3-small"
+            platform: str = None,
+            api_key: str = None,
+            embedding_model: str = None
     ):
         """
         Memory: memory and external knowledge management.
         Args:
             project_path: the path to store the data.
-            embedding_model: the embedding model to use, default will use the embedding model from ChromaDB,
-             if the OpenAI has been set in the configuration, it will use the OpenAI embedding model
-             "text-embedding-ada-002".
+            embedding_model: the embedding model to use. Defaults to EMBEDDING_MODEL from config.
+                             Use 'Local' platform for free sentence-transformers.
         """
         self.db_name = db_name
         self.collection_name = 'memory'
@@ -35,11 +34,17 @@ class Memory:
                 self.collection_name,
             ) 
         # use the OpenAI embedding function if the openai section is set in the configuration.
+        if platform is None:
+            platform = EMBEDDING_PLATFORM
+        if embedding_model is None:
+            from research_agent.constant import EMBEDDING_MODEL
+            embedding_model = EMBEDDING_MODEL
+
         if platform == 'OpenAI':
-            openai_client = OpenAI(api_key=api_key or os.environ["OPENAI_API_KEY"], base_url=API_BASE_URL)
+            openai_client = OpenAI(api_key=api_key or os.environ.get("OPENAI_API_KEY", ""), base_url=API_BASE_URL)
             self.embedder = lambda x: [i.embedding for i in openai_client.embeddings.create(input=x, model=embedding_model).data]
         else:
-            # self.embedder = embedding_functions.DefaultEmbeddingFunction()
+            # Free local embeddings using sentence-transformers (no API key needed)
             self.embedder = embedding_functions.SentenceTransformerEmbeddingFunction(model_name="all-MiniLM-L6-v2")
 
     def add_query(

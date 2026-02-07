@@ -9,7 +9,9 @@ from benchmark_collection.utils.openai_utils import GPTClient
 from paper_agent.section_composer import SectionComposer, setup_logging
 
 class ExperimentsComposer(SectionComposer):
-    def __init__(self, research_field: str, structure_iterations: int = 3, gpt_model='gpt-4o-mini-2024-07-18'):
+    def __init__(self, research_field: str, structure_iterations: int = 3, gpt_model=None):
+        if gpt_model is None:
+            gpt_model = os.getenv('CHEEP_MODEL', 'ollama/llama3.1:8b')
         super().__init__(research_field, "experiments", structure_iterations)
 
     def read_project_structure(self, project_dir):

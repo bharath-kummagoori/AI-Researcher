@@ -3,7 +3,7 @@ from research_agent.inno.environment.docker_env import DockerEnv
 import tiktoken
 from datetime import datetime
 
-def truncate_by_tokens(env: DockerEnv, text, max_tokens = 4096, model="gpt-4o-2024-08-06"):
+def truncate_by_tokens(env, text, max_tokens = 4096, model="gpt-4o"):
     from research_agent.inno.tools.terminal_tools import create_file
     encoding = tiktoken.encoding_for_model(model)
     tokens = encoding.encode(text)

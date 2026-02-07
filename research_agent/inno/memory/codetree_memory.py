@@ -8,11 +8,19 @@ from tree_sitter import Language
 from loguru import logger
 from openai import OpenAI
 import pandas as pd
+from research_agent.constant import EMBEDDING_PLATFORM
+
 class CodeTreeMemory(Memory):
-    def __init__(self, project_path: str, db_name: str = '.code_tree', platform: str = 'OpenAI', api_key: str = None, embedding_model: str = "text-embedding-ada-002"):
+    def __init__(self, project_path: str, db_name: str = '.code_tree', platform: str = None, api_key: str = None, embedding_model: str = None):
+        if platform is None:
+            platform = EMBEDDING_PLATFORM
         super().__init__(project_path, db_name, platform, api_key, embedding_model)
         self.collection_name = 'code_tree_memory'
-        self.embedder = OpenAI(api_key=api_key)
+        if platform == 'OpenAI':
+            self.embedder = OpenAI(api_key=api_key)
+        else:
+            from research_agent.inno.memory.local_embeddings import LocalEmbeddingWrapper
+            self.embedder = LocalEmbeddingWrapper()
         
 
     def add_code_files(self, directory: str, exclude_prefix: List[str] = ["workplace_"]):
@@ -40,7 +48,7 @@ class CodeTreeMemory(Memory):
             directory
         )
         snippet_texts = list(map(lambda x: x.snippet.decode("ISO-8859-1"), parsed_snippets))
-        embedded_texts = self.embedder.embeddings.create(input=snippet_texts, model="text-embedding-3-small").data
+        embedded_texts = self.embedder.embeddings.create(input=snippet_texts, model="local").data
         embedded_snippets = []
         for code_text, embedding, snippet in zip(
             snippet_texts, embedded_texts, parsed_snippets
@@ -77,7 +85,7 @@ class CodeTreeMemory(Memory):
         Returns:
             List[Dict]: The query results list
         """
-        query_embedding = self.embedder.embeddings.create(input=[query_text], model="text-embedding-3-small").data[0].embedding
+        query_embedding = self.embedder.embeddings.create(input=[query_text], model="local").data[0].embedding
         results = self.client.get_or_create_collection(self.collection_name).query(query_embeddings=[query_embedding], n_results=n_results)
         return [
             {
@@ -104,7 +112,7 @@ class DummyReranker(Reranker):
 
 # 使用示例
 if __name__ == "__main__":
-    code_memory = CodeTreeMemory(project_path = './code_db', db_name='code_tree', platform='OpenAI', api_key='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')
+    code_memory = CodeTreeMemory(project_path = './code_db', db_name='code_tree')
     
     # 添加代码文件到内存
     code_memory.add_code_files("/Users/tangjiabin/Documents/reasoning/SelfAgent/workplace_test/SelfAgent", exclude_prefix=['workplace_', '__pycache__', 'code_db', '.git'])

@@ -322,7 +322,7 @@ def sleep(env: BrowserEnv):
             value=ret_value,
             image=web_obs.screenshot, 
         )
-def truncate_by_tokens(env: DockerEnv, text, max_tokens = 4096, model="gpt-4o-2024-08-06"):
+def truncate_by_tokens(env, text, max_tokens = 4096, model="gpt-4o"):
     from inno.tools.files import create_file, create_directory
     encoding = tiktoken.encoding_for_model(model)
     tokens = encoding.encode(text)
