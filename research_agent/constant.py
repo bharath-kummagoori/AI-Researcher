@@ -42,12 +42,13 @@ BASE_IMAGES = os.getenv('BASE_IMAGES', "tjbtech1/paperapp:latest")
 # "docker" = Docker-based execution (original behavior)
 EXECUTION_MODE = os.getenv('EXECUTION_MODE', 'local')
 
-# ============ FREE LLM CONFIGURATION (Ollama) ============
-# Default: Ollama local models (completely free, runs on your machine)
-# To use Ollama: install from https://ollama.com then run: ollama pull llama3.1:8b
-# For paid models, change to: gpt-4o-2024-08-06, openrouter/google/gemini-2.5-pro, etc.
-COMPLETION_MODEL = os.getenv('COMPLETION_MODEL', "ollama/llama3.1:8b")
-CHEEP_MODEL = os.getenv('CHEEP_MODEL', "ollama/llama3.1:8b")
+# ============ FREE LLM CONFIGURATION ============
+# Default: Google Gemini free tier (fast, no GPU needed)
+# Get free API key at: https://aistudio.google.com/apikey
+# Set GEMINI_API_KEY in your .env file
+# For Ollama local: change to ollama/llama3.1:8b (slow on CPU without GPU)
+COMPLETION_MODEL = os.getenv('COMPLETION_MODEL', "gemini/gemini-2.0-flash")
+CHEEP_MODEL = os.getenv('CHEEP_MODEL', "gemini/gemini-2.0-flash")
 
 # ============ EMBEDDING CONFIGURATION ============
 # "local" = free sentence-transformers (default), "text-embedding-3-small" = paid OpenAI
