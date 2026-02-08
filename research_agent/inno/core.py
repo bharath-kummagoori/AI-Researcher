@@ -1,12 +1,14 @@
 # Standard library imports
 import copy
 import json
+import asyncio
+import re as _re
 from collections import defaultdict
 from typing import List, Callable, Union
 from datetime import datetime
 # Local imports
 import litellm
-from litellm import ContextWindowExceededError, BadRequestError
+from litellm import ContextWindowExceededError, BadRequestError, RateLimitError
 from litellm.types.utils import Message as litellmMessage
 from .util import function_to_json, debug_print, merge_chunk, pretty_print_messages
 from .types import (
@@ -435,48 +437,64 @@ class MetaChain:
         return completion_response
 
     async def try_completion_with_truncation(self, agent, history, context_variables, model_override, stream, debug):
-        try:
-            return await self.get_chat_completion_async(
-                agent=agent,
-                history=history,
-                context_variables=context_variables,
-                model_override=model_override,
-                stream=stream,
-                debug=debug,
-            )
-        except (ContextWindowExceededError, BadRequestError) as e:
-            error_msg = str(e)
-            # 检查是否是上下文长度超限错误
-            if "context length" in error_msg.lower() or "context_length_exceeded" in error_msg:
-                # 提取超出的token数量
-                # match = re.search(r'resulted in (\d+) tokens.*maximum context length is (\d+)', error_msg)
-                # if match:
-                # current_tokens = int(match.group(1))
-                # max_tokens = int(match.group(2))
-                
-                # 修改最后一条消息
-                if history and len(history) > 0:
-                    last_message = history[-1]
-                    if isinstance(last_message.get('content'), str):
-                        last_message['content'] = truncate_message(
-                            last_message['content'],
-                        )
-                        self.logger.info(
-                            f"消息已截断以适应上下文长度限制", 
-                            title="Message Truncated", 
-                            color="yellow"
-                        )
-                        # 重试一次
-                        return await self.get_chat_completion_async(
-                            agent=agent,
-                            history=history,
-                            context_variables=context_variables,
-                            model_override=model_override,
-                            stream=stream,
-                            debug=debug,
-                        )
-            # 如果不是上下文长度问题或无法处理，则重新抛出异常
-            raise e
+        max_retries = 5
+        for attempt in range(max_retries):
+            try:
+                return await self.get_chat_completion_async(
+                    agent=agent,
+                    history=history,
+                    context_variables=context_variables,
+                    model_override=model_override,
+                    stream=stream,
+                    debug=debug,
+                )
+            except RateLimitError as e:
+                error_msg = str(e)
+                # Extract retry delay from error message if available
+                wait_time = 60  # default wait
+                retry_match = _re.search(r'retry in (\d+\.?\d*)', error_msg.lower())
+                if retry_match:
+                    wait_time = min(float(retry_match.group(1)) + 5, 120)  # add 5s buffer, cap at 120s
+                else:
+                    wait_time = min(30 * (attempt + 1), 120)  # 30s, 60s, 90s, 120s
+
+                if attempt < max_retries - 1:
+                    self.logger.info(
+                        f"Rate limited (attempt {attempt + 1}/{max_retries}). Waiting {wait_time:.0f}s before retry...",
+                        title="Rate Limit - Retrying",
+                        color="yellow"
+                    )
+                    await asyncio.sleep(wait_time)
+                else:
+                    self.logger.info(
+                        f"Rate limited after {max_retries} attempts. Giving up.",
+                        title="Rate Limit - Failed",
+                        color="red"
+                    )
+                    raise e
+            except (ContextWindowExceededError, BadRequestError) as e:
+                error_msg = str(e)
+                if "context length" in error_msg.lower() or "context_length_exceeded" in error_msg:
+                    if history and len(history) > 0:
+                        last_message = history[-1]
+                        if isinstance(last_message.get('content'), str):
+                            last_message['content'] = truncate_message(
+                                last_message['content'],
+                            )
+                            self.logger.info(
+                                f"Message truncated to fit context length limit",
+                                title="Message Truncated",
+                                color="yellow"
+                            )
+                            return await self.get_chat_completion_async(
+                                agent=agent,
+                                history=history,
+                                context_variables=context_variables,
+                                model_override=model_override,
+                                stream=stream,
+                                debug=debug,
+                            )
+                raise e
     
     async def run_async(
         self,
