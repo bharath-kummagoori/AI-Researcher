@@ -47,8 +47,8 @@ EXECUTION_MODE = os.getenv('EXECUTION_MODE', 'local')
 # Get free API key at: https://aistudio.google.com/apikey
 # Set GEMINI_API_KEY in your .env file
 # For Ollama local: change to ollama/llama3.1:8b (slow on CPU without GPU)
-COMPLETION_MODEL = os.getenv('COMPLETION_MODEL', "gemini/gemini-1.5-flash")
-CHEEP_MODEL = os.getenv('CHEEP_MODEL', "gemini/gemini-1.5-flash")
+COMPLETION_MODEL = os.getenv('COMPLETION_MODEL', "gemini/gemini-2.0-flash")
+CHEEP_MODEL = os.getenv('CHEEP_MODEL', "gemini/gemini-2.0-flash")
 
 # ============ EMBEDDING CONFIGURATION ============
 # "local" = free sentence-transformers (default), "text-embedding-3-small" = paid OpenAI
