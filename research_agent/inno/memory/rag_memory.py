@@ -1,7 +1,20 @@
 import uuid
+import os
 import os.path
+import ssl
 from datetime import datetime
 from typing import List, Dict
+
+# Bypass SSL verification for corporate proxies/firewalls
+if os.environ.get('DISABLE_SSL_VERIFY', 'true').lower() in ('true', '1', 'yes'):
+    os.environ.setdefault('CURL_CA_BUNDLE', '')
+    os.environ.setdefault('REQUESTS_CA_BUNDLE', '')
+    os.environ.setdefault('HF_HUB_DISABLE_TELEMETRY', '1')
+    try:
+        ssl._create_default_https_context = ssl._create_unverified_context
+    except AttributeError:
+        pass
+
 import chromadb
 from chromadb.utils import embedding_functions
 from abc import ABC, abstractmethod

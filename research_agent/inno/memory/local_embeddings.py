@@ -3,7 +3,19 @@ Local embedding functions using sentence-transformers (free, no API key needed).
 Drop-in replacement for OpenAI embeddings used throughout the codebase.
 """
 import os
+import ssl
 from typing import List
+
+# Bypass SSL verification for corporate proxies/firewalls
+# that intercept HTTPS with self-signed certificates
+if os.environ.get('DISABLE_SSL_VERIFY', 'true').lower() in ('true', '1', 'yes'):
+    os.environ.setdefault('CURL_CA_BUNDLE', '')
+    os.environ.setdefault('REQUESTS_CA_BUNDLE', '')
+    os.environ.setdefault('HF_HUB_DISABLE_TELEMETRY', '1')
+    try:
+        ssl._create_default_https_context = ssl._create_unverified_context
+    except AttributeError:
+        pass
 
 _EMBEDDER = None
 _EMBEDDING_MODEL_NAME = "all-MiniLM-L6-v2"

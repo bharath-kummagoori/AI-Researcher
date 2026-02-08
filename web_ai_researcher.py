@@ -1,5 +1,18 @@
-from main_ai_researcher import main_ai_researcher
 import os
+import ssl
+
+# Bypass SSL verification for corporate proxies/firewalls
+# that intercept HTTPS with self-signed certificates
+if os.environ.get('DISABLE_SSL_VERIFY', 'true').lower() in ('true', '1', 'yes'):
+    os.environ.setdefault('CURL_CA_BUNDLE', '')
+    os.environ.setdefault('REQUESTS_CA_BUNDLE', '')
+    os.environ.setdefault('HF_HUB_DISABLE_TELEMETRY', '1')
+    try:
+        ssl._create_default_https_context = ssl._create_unverified_context
+    except AttributeError:
+        pass
+
+from main_ai_researcher import main_ai_researcher
 import gradio as gr
 import time
 import json
