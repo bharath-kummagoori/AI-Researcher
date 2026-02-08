@@ -20,7 +20,10 @@ def search_github_repos(query, limit=5):
         
         url = f'https://api.github.com/search/repositories?q={query}&per_page={per_page}&page={page}'
 
-        response = requests.get(url)
+        try:
+            response = requests.get(url)
+        except Exception as e:
+            return f"GitHub search failed due to network error: {e}. Continuing without GitHub results."
 
         if response.status_code == 200:
             items = response.json().get('items', [])
@@ -39,7 +42,7 @@ def search_github_repos(query, limit=5):
                 break
             page += 1
         else:
-            raise Exception(f"GitHub API request failed with status code {response.status_code}: {response.text}")
+            return f"GitHub search returned status {response.status_code}. This is non-critical - continuing without GitHub results."
 
     return_str = """
     Here are some of the repositories I found on GitHub:
@@ -74,24 +77,29 @@ def search_github_code(repo_owner: str,
     Returns:
         List[Dict]: The search results list
     """
-    searcher = GitHubSearcher(GITHUB_AI_TOKEN)
-    results = searcher.search_code(repo_owner, repo_name, query, language, per_page, page)
-    # print(results)
+    try:
+        searcher = GitHubSearcher(GITHUB_AI_TOKEN)
+    except ValueError:
+        searcher = GitHubSearcher(None)
+    try:
+        results = searcher.search_code(repo_owner, repo_name, query, language, per_page, page)
+    except Exception as e:
+        return json.dumps([{"error": f"GitHub code search failed: {e}"}], indent=4)
     if 'items' not in results:
-        return []
-        
+        return json.dumps([], indent=4)
+
     # Extract useful information
     formatted_results = []
     for item in results['items']:
-        response = requests.get(item['url'])
-        if response.status_code == 200:
-            download_url = response.json()['download_url']
-            response = requests.get(download_url)
+        try:
+            response = requests.get(item['url'])
             if response.status_code == 200:
-                content = response.text
+                download_url = response.json()['download_url']
+                response = requests.get(download_url)
+                content = response.text if response.status_code == 200 else ""
             else:
                 content = ""
-        else:
+        except Exception:
             content = ""
         formatted_results.append({
             'name': item['name'],

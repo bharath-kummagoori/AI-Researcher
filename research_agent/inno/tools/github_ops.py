@@ -94,8 +94,10 @@ def submit_pull_request(title: str, body: str, target_branch: str):
         target_branch: target branch
     """
     # initialize GitHub client
+    if not GITHUB_AI_TOKEN:
+        return json.dumps({'status': -1, 'message': 'GITHUB_AI_TOKEN not configured. PR submission requires a GitHub token.'}, indent=4)
     github = GitHubClient(GITHUB_AI_TOKEN)
-    
+
     # check authentication
     auth_result = github.check_auth()
     if auth_result['status'] != 0:

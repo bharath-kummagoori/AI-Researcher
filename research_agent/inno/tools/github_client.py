@@ -14,14 +14,15 @@ class GitHubClient:
             token: GitHub Personal Access Token, if None, try to get from environment variable
         """
         self.token = token or os.getenv('GITHUB_AI_TOKEN')
-        if not self.token:
-            raise ValueError("GitHub Token is required, please provide it via the token parameter or set the GITHUB_AI_TOKEN environment variable.")
-        
+
         self.session = requests.Session()
         self.session.headers.update({
-            'Authorization': f'token {self.token}',
             'Accept': 'application/vnd.github.v3+json'
         })
+        if self.token:
+            self.session.headers.update({
+                'Authorization': f'token {self.token}',
+            })
         self.api_base = 'https://api.github.com'
     
     def check_auth(self) -> dict:
