@@ -3,7 +3,26 @@ Quick test script to verify your LLM API key works before running AI-Researcher.
 Usage: python test_api_key.py
 """
 import os
+import ssl
 import sys
+
+# Bypass SSL verification for corporate proxies
+os.environ.setdefault('CURL_CA_BUNDLE', '')
+os.environ.setdefault('REQUESTS_CA_BUNDLE', '')
+os.environ['PYTHONHTTPSVERIFY'] = '0'
+try:
+    ssl._create_default_https_context = ssl._create_unverified_context
+except AttributeError:
+    pass
+import requests
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+_original_request = requests.Session.request
+def _patched_request(self, *args, **kwargs):
+    kwargs.setdefault('verify', False)
+    return _original_request(self, *args, **kwargs)
+requests.Session.request = _patched_request
+
 from dotenv import load_dotenv
 
 load_dotenv()
