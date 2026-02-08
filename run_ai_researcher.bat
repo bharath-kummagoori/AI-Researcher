@@ -15,7 +15,7 @@ echo.
 REM ============================================================
 REM  STEP 1: Check Prerequisites
 REM ============================================================
-echo [Step 1/8] Checking prerequisites...
+echo [Step 1/7] Checking prerequisites...
 echo.
 
 REM Check Git
@@ -62,42 +62,22 @@ echo  All prerequisites found!
 echo.
 
 REM ============================================================
-REM  STEP 2: Set install directory
+REM  STEP 2: Use current directory as project root
 REM ============================================================
-echo [Step 2/8] Setting up install directory...
+echo [Step 2/7] Setting up project directory...
 echo.
 
-set "INSTALL_DIR=%USERPROFILE%\AI-Researcher"
-
-if exist "%INSTALL_DIR%\.git" (
-    echo  Project already exists at %INSTALL_DIR%
-    echo  Updating to latest...
-    cd /d "%INSTALL_DIR%"
-    git fetch origin claude/cloud-deployment-evaluation-66wzi 2>nul
-    git checkout claude/cloud-deployment-evaluation-66wzi 2>nul
-    git pull origin claude/cloud-deployment-evaluation-66wzi 2>nul
-    echo  [OK] Updated to latest version
-) else (
-    echo  Cloning AI-Researcher to %INSTALL_DIR%...
-    git clone https://github.com/bharath-kummagoori/AI-Researcher.git "%INSTALL_DIR%"
-    if errorlevel 1 (
-        echo  [X] Failed to clone repository. Check your internet connection.
-        pause
-        exit /b 1
-    )
-    cd /d "%INSTALL_DIR%"
-    git checkout claude/cloud-deployment-evaluation-66wzi
-    echo  [OK] Repository cloned and branch checked out
-)
+REM Use the directory where this script is located
+set "INSTALL_DIR=%~dp0"
+cd /d "%INSTALL_DIR%"
+echo  [OK] Project directory: %INSTALL_DIR%
 echo.
 
 REM ============================================================
 REM  STEP 3: Create Python virtual environment
 REM ============================================================
-echo [Step 3/8] Setting up Python virtual environment...
+echo [Step 3/7] Setting up Python virtual environment...
 echo.
-
-cd /d "%INSTALL_DIR%"
 
 if not exist "venv\Scripts\activate.bat" (
     python -m venv venv
@@ -118,7 +98,7 @@ echo.
 REM ============================================================
 REM  STEP 4: Install Python dependencies
 REM ============================================================
-echo [Step 4/8] Installing Python dependencies (this may take a few minutes)...
+echo [Step 4/7] Installing Python dependencies (this may take a few minutes)...
 echo.
 
 pip install --upgrade pip >nul 2>&1
@@ -137,26 +117,11 @@ echo  [OK] Python dependencies installed
 echo.
 
 REM ============================================================
-REM  STEP 5: Install Playwright browser (for web scraping)
+REM  STEP 5: Setup environment configuration
 REM ============================================================
-echo [Step 5/8] Installing browser for web scraping...
+echo [Step 5/7] Configuring environment...
 echo.
 
-python -m playwright install chromium >nul 2>&1
-if errorlevel 1 (
-    echo  [!] Playwright browser install skipped (web scraping may be limited)
-) else (
-    echo  [OK] Chromium browser installed for web scraping
-)
-echo.
-
-REM ============================================================
-REM  STEP 6: Setup environment configuration
-REM ============================================================
-echo [Step 6/8] Configuring environment...
-echo.
-
-cd /d "%INSTALL_DIR%"
 if not exist ".env" (
     copy .env.template .env >nul
     echo  [OK] Created .env with free Ollama defaults
@@ -166,9 +131,9 @@ if not exist ".env" (
 echo.
 
 REM ============================================================
-REM  STEP 7: Pull Ollama model
+REM  STEP 6: Pull Ollama model
 REM ============================================================
-echo [Step 7/8] Pulling free LLM model (llama3.1:8b, ~4.7GB one-time download)...
+echo [Step 6/7] Pulling free LLM model (llama3.1:8b, ~4.7GB one-time download)...
 echo.
 
 REM Start Ollama if not running
@@ -190,9 +155,9 @@ if errorlevel 1 (
 echo.
 
 REM ============================================================
-REM  STEP 8: Launch AI-Researcher
+REM  STEP 7: Launch AI-Researcher
 REM ============================================================
-echo [Step 8/8] Launching AI-Researcher...
+echo [Step 7/7] Launching AI-Researcher...
 echo.
 echo  ============================================================
 echo       SETUP COMPLETE - Launching Web UI
@@ -205,7 +170,6 @@ echo  Total cost: $0
 echo  ============================================================
 echo.
 
-cd /d "%INSTALL_DIR%"
 start http://127.0.0.1:7039
 python web_ai_researcher.py
 
