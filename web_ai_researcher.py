@@ -7,10 +7,22 @@ if os.environ.get('DISABLE_SSL_VERIFY', 'true').lower() in ('true', '1', 'yes'):
     os.environ.setdefault('CURL_CA_BUNDLE', '')
     os.environ.setdefault('REQUESTS_CA_BUNDLE', '')
     os.environ.setdefault('HF_HUB_DISABLE_TELEMETRY', '1')
+    os.environ['PYTHONHTTPSVERIFY'] = '0'
     try:
         ssl._create_default_https_context = ssl._create_unverified_context
     except AttributeError:
         pass
+    # Monkey-patch requests to disable SSL verification globally
+    # This is needed because huggingface_hub uses requests internally
+    # and ignores ssl._create_default_https_context
+    import requests
+    import urllib3
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    _original_request = requests.Session.request
+    def _patched_request(self, *args, **kwargs):
+        kwargs.setdefault('verify', False)
+        return _original_request(self, *args, **kwargs)
+    requests.Session.request = _patched_request
 
 from main_ai_researcher import main_ai_researcher
 import gradio as gr
