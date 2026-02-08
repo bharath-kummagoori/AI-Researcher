@@ -1408,7 +1408,6 @@ def create_ui():
                     placeholder="Please enter your questions...",
                     label="Prompt",
                     elem_id="question_input",
-                    show_copy_button=True,
                     # elem_classes="scrolling-textbox",
                     value="Write a hello world python file and save it in local file",
                 )
@@ -1419,7 +1418,6 @@ def create_ui():
                     placeholder="Please enter your reference papers...",
                     label="Reference",
                     elem_id="reference_input",
-                    show_copy_button=True,
                     # elem_classes="scrolling-textbox",
                     value="1. Attention is all you need. ",
                 )
